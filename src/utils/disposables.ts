@@ -91,9 +91,9 @@ export class AutoDisposable implements vscode.Disposable {
       return this;
     }
 
-    const weakThis = new WeakRef(this);
+    // const weakThis = new WeakRef(this);
 
-    thenable.then(() => weakThis.deref()?.dispose());
+    // thenable.then(() => weakThis.deref()?.dispose());
 
     return this;
   }
@@ -139,9 +139,10 @@ export class AutoDisposable implements vscode.Disposable {
   }
 
   public disposeOnUserEvent(event: AutoDisposable.Event, context: Context) {
-    const editorState = context.extension.editors.getState(context.editor as any)!;
-    let eventName: AutoDisposable.EventType,
-        eventOpts: Record<string, unknown>;
+    const editorState = context.extension.editors.getState(
+      context.editor as any
+    )!;
+    let eventName: AutoDisposable.EventType, eventOpts: Record<string, unknown>;
 
     if (Array.isArray(event)) {
       if (event.length === 0) {
@@ -173,58 +174,73 @@ export class AutoDisposable implements vscode.Disposable {
     }
 
     switch (eventName) {
-    case AutoDisposable.EventType.OnEditorWasClosed:
-      this.disposeOnEvent(editorState.onEditorWasClosed);
-      break;
+      case AutoDisposable.EventType.OnEditorWasClosed:
+        this.disposeOnEvent(editorState.onEditorWasClosed);
+        break;
 
-    case AutoDisposable.EventType.OnModeDidChange:
-      const except = [] as string[];
+      case AutoDisposable.EventType.OnModeDidChange:
+        const except = [] as string[];
 
-      if (Array.isArray(eventOpts["except"])) {
-        except.push(...eventOpts["except"]);
-      } else if (typeof eventOpts["except"] === "string") {
-        except.push(eventOpts["except"]);
-      }
-
-      const include = [] as string[];
-
-      if (Array.isArray(eventOpts["include"])) {
-        include.push(...eventOpts["include"]);
-      } else if (typeof eventOpts["include"] === "string") {
-        include.push(eventOpts["include"]);
-      }
-
-      editorState.extension.editors.onModeDidChange((e) => {
-        if (e === editorState && !except.includes(e.mode.name)
-            && (include.length === 0 || include.includes(e.mode.name))) {
-          this.dispose();
-        }
-      }, undefined, this._disposables);
-      break;
-
-    case AutoDisposable.EventType.OnSelectionsDidChange:
-      vscode.window.onDidChangeTextEditorSelection((e) => {
-        if (editorState.editor !== e.textEditor) {
-          return;
+        if (Array.isArray(eventOpts["except"])) {
+          except.push(...eventOpts["except"]);
+        } else if (typeof eventOpts["except"] === "string") {
+          except.push(eventOpts["except"]);
         }
 
-        const cursor = context.extension.recorder.cursorFromEnd();
+        const include = [] as string[];
 
-        if (cursor.previous()) {
-          if (cursor.is(Entry.DeleteAfter) || cursor.is(Entry.DeleteBefore)
-              || cursor.is(Entry.InsertAfter) || cursor.is(Entry.InsertBefore)
-              || cursor.is(Entry.ReplaceWith)) {
-            // Regular edit.
-            return;
-          }
+        if (Array.isArray(eventOpts["include"])) {
+          include.push(...eventOpts["include"]);
+        } else if (typeof eventOpts["include"] === "string") {
+          include.push(eventOpts["include"]);
         }
 
-        this.dispose();
-      }, undefined, this._disposables);
-      break;
+        editorState.extension.editors.onModeDidChange(
+          (e) => {
+            if (
+              e === editorState &&
+              !except.includes(e.mode.name) &&
+              (include.length === 0 || include.includes(e.mode.name))
+            ) {
+              this.dispose();
+            }
+          },
+          undefined,
+          this._disposables
+        );
+        break;
 
-    default:
-      throw new Error();
+      case AutoDisposable.EventType.OnSelectionsDidChange:
+        vscode.window.onDidChangeTextEditorSelection(
+          (e) => {
+            if (editorState.editor !== e.textEditor) {
+              return;
+            }
+
+            const cursor = context.extension.recorder.cursorFromEnd();
+
+            if (cursor.previous()) {
+              if (
+                cursor.is(Entry.DeleteAfter) ||
+                cursor.is(Entry.DeleteBefore) ||
+                cursor.is(Entry.InsertAfter) ||
+                cursor.is(Entry.InsertBefore) ||
+                cursor.is(Entry.ReplaceWith)
+              ) {
+                // Regular edit.
+                return;
+              }
+            }
+
+            this.dispose();
+          },
+          undefined,
+          this._disposables
+        );
+        break;
+
+      default:
+        throw new Error();
     }
   }
 }
@@ -238,7 +254,10 @@ export /* enum */ namespace AutoDisposable {
 }
 
 export declare namespace AutoDisposable {
-  export type Event = EventType
-    | readonly [EventType.OnModeDidChange,
-                { except?: string | string[]; include?: string | string[] }];
+  export type Event =
+    | EventType
+    | readonly [
+        EventType.OnModeDidChange,
+        { except?: string | string[]; include?: string | string[] }
+      ];
 }

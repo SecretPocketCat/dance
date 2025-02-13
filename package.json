@@ -33,7 +33,8 @@
     "package": "vsce package --allow-star-activation",
     "publish": "vsce publish --allow-star-activation",
     "package:pre": "vsce package --allow-star-activation --pre-release --no-git-tag-version --no-update-package-json 0.5.15001",
-    "publish:pre": "vsce publish --allow-star-activation --pre-release --no-git-tag-version --no-update-package-json 0.5.15001"
+    "publish:pre": "vsce publish --allow-star-activation --pre-release --no-git-tag-version --no-update-package-json 0.5.15001",
+    "declaration": "tsc src/api/index.ts --declaration --emitDeclarationOnly --target es2015 --moduleResolution node --module ESNext --outFile ../dance_scripts/src/dance.d.ts"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
@@ -4605,5 +4606,6 @@
         "when": "editorTextFocus && dance.mode == 'select'"
       }
     ]
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

@@ -58,7 +58,7 @@ export class Extension implements vscode.Disposable {
   /**
    * `Recorder` for this instance of the extension.
    */
-  public readonly recorder: Recorder;  // Needs to be initialized later.
+  public readonly recorder: Recorder; // Needs to be initialized later.
 
   /**
    * `Editors` for this instance of the extension.
@@ -133,12 +133,12 @@ export class Extension implements vscode.Disposable {
 
         for (const menuName in value) {
           const menu = value[menuName],
-                validationErrors = validateMenu(menu);
+            validationErrors = validateMenu(menu);
 
           if (validationErrors.length === 0) {
             if (!vscode.workspace.isTrusted) {
               const globalConfig = inspect.globalValue?.[menuName],
-                    defaultConfig = inspect.defaultValue?.[menuName];
+                defaultConfig = inspect.defaultValue?.[menuName];
 
               if (globalConfig !== undefined || defaultConfig !== undefined) {
                 // Menu is a global menu; make sure that the local workspace does
@@ -146,7 +146,10 @@ export class Extension implements vscode.Disposable {
                 for (const key in menu.items) {
                   if (globalConfig !== undefined && key in globalConfig.items) {
                     menu.items[key] = globalConfig.items[key];
-                  } else if (defaultConfig !== undefined && key in defaultConfig.items) {
+                  } else if (
+                    defaultConfig !== undefined &&
+                    key in defaultConfig.items
+                  ) {
                     menu.items[key] = defaultConfig.items[key];
                   }
                 }
@@ -165,18 +168,21 @@ export class Extension implements vscode.Disposable {
           }
         }
       },
-      true,
+      true
     );
 
     this._subscriptions.push(
       // Update configuration automatically.
       vscode.workspace.onDidChangeConfiguration((e) => {
-        for (const [section, handler] of this._configurationChangeHandlers.entries()) {
+        for (const [
+          section,
+          handler,
+        ] of this._configurationChangeHandlers.entries()) {
           if (e.affectsConfiguration(section)) {
             handler();
           }
         }
-      }),
+      })
     );
 
     // Register all commands.
@@ -188,7 +194,9 @@ export class Extension implements vscode.Disposable {
     this._subscriptions.push(new RegistersView(this.registers).register());
 
     // Tree Sitter support.
-    this._subscriptions.push(onDidLoadTreeSitter((treeSitter) => this._treeSitter = treeSitter));
+    this._subscriptions.push(
+      onDidLoadTreeSitter((treeSitter) => (this._treeSitter = treeSitter))
+    );
   }
 
   /**
@@ -216,11 +224,14 @@ export class Extension implements vscode.Disposable {
    */
   public observePreference<T>(
     section: string,
-    handler: (value: T, validator: SettingsValidator, inspect: InspectType<T>) => void,
-    triggerNow = false,
+    handler: (
+      value: T,
+      validator: SettingsValidator,
+      inspect: InspectType<T>
+    ) => void,
+    triggerNow = false
   ) {
-    let configuration: vscode.WorkspaceConfiguration,
-        fullName: string;
+    let configuration: vscode.WorkspaceConfiguration, fullName: string;
 
     if (section[0] === ".") {
       fullName = extensionName + section;
@@ -234,15 +245,15 @@ export class Extension implements vscode.Disposable {
     const defaultValue = configuration.inspect<T>(section)!.defaultValue!;
 
     this._configurationChangeHandlers.set(fullName, () => {
-      const validator = new SettingsValidator(fullName),
-            topSection = fullName === section ? undefined : extensionName,
-            configuration = vscode.workspace.getConfiguration(topSection);
+      const validator = new SettingsValidator(fullName);
+      // topSection = fullName === section ? undefined : extensionName,
+      // configuration = vscode.workspace.getConfiguration(topSection);
 
-      handler(
-        configuration.get<T>(section, defaultValue),
-        validator,
-        handler.length > 2 ? configuration.inspect<T>(section)! : undefined!,
-      );
+      // handler(
+      //   configuration.get<T>(section, defaultValue),
+      //   validator,
+      //   handler.length > 2 ? configuration.inspect<T>(section)! : undefined!,
+      // );
 
       validator.displayErrorIfNeeded();
     });
@@ -250,11 +261,11 @@ export class Extension implements vscode.Disposable {
     if (triggerNow) {
       const validator = new SettingsValidator(fullName);
 
-      handler(
-        configuration.get(section, defaultValue),
-        validator,
-        handler.length > 2 ? configuration.inspect<T>(section)! : undefined!,
-      );
+      // handler(
+      //   configuration.get(section, defaultValue),
+      //   validator,
+      //   handler.length > 2 ? configuration.inspect<T>(section)! : undefined!
+      // );
 
       validator.displayErrorIfNeeded();
     }
@@ -265,8 +276,10 @@ export class Extension implements vscode.Disposable {
   // =============================================================================================
 
   private _cancellationTokenSource = new vscode.CancellationTokenSource();
-  private readonly _cancellationReasons =
-    new WeakMap<vscode.CancellationToken, CancellationError.Reason>();
+  private readonly _cancellationReasons = new WeakMap<
+    vscode.CancellationToken,
+    CancellationError.Reason
+  >();
 
   /**
    * The token for the next command.
@@ -379,7 +392,7 @@ export class Extension implements vscode.Disposable {
   public runSafely<T>(
     f: () => T,
     errorValue: () => T,
-    errorMessage: (error: any) => T extends Thenable<any> ? never : string,
+    errorMessage: (error: any) => T extends Thenable<any> ? never : string
   ) {
     this.dismissErrorMessage();
 
@@ -401,7 +414,7 @@ export class Extension implements vscode.Disposable {
   public async runPromiseSafely<T>(
     f: () => Thenable<T>,
     errorValue: () => T,
-    errorMessage: (error: any) => string,
+    errorMessage: (error: any) => string
   ) {
     this.dismissErrorMessage();
 
@@ -417,10 +430,13 @@ export class Extension implements vscode.Disposable {
   }
 }
 
-type InspectUnknown = Exclude<ReturnType<vscode.WorkspaceConfiguration["inspect"]>, undefined>;
+type InspectUnknown = Exclude<
+  ReturnType<vscode.WorkspaceConfiguration["inspect"]>,
+  undefined
+>;
 type InspectType<T> = {
   // Replace all properties that are `unknown` by `T | undefined`.
-  readonly [K in keyof InspectUnknown]: (InspectUnknown[K] & null) extends never
+  readonly [K in keyof InspectUnknown]: InspectUnknown[K] & null extends never
     ? InspectUnknown[K]
     : T | undefined;
-}
+};

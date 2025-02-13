@@ -3,7 +3,6 @@
     "module": "CommonJS",
     "target": "ES2021",
     "lib": ["ESNext.WeakRef"],
-    "noEmit": true,
     "sourceMap": true,
     "strict": true,
     "noImplicitReturns": true,
@@ -13,6 +12,7 @@
     "strictNullChecks": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
+    "moduleResolution": "node"
   },
-  "exclude": ["node_modules", ".vscode-test"],
+  "exclude": ["node_modules", ".vscode-test"]
 }
